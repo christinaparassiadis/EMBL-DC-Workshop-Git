@@ -70,4 +70,33 @@ surveys %>%
   arrange(year) %>% 
   unique()
   
- 
+# Rearrange according to genus 
+surveys_gw <- surveys  %>% 
+  filter(!is.na(weight)) %>% 
+  group_by(plot_id,genus) %>% 
+  summarise(mean_weight = mean(weight))
+
+# converting to a wide format
+surveys_wide <- surveys_gw %>% 
+  pivot_wider(names_from = genus, values_from = mean_weight, values_fill = 0)
+
+# converting back to a long format (useful for plotting data)
+# columns have to be indicated 
+surveys_long <- surveys_wide %>% 
+  pivot_longer(names_to = "genus", values_to = "mean_weight", cols = -plot_id)
+
+# measurement hindfoot_length and weight
+# mean values of each measurement per year in different plot types 
+surveys_long_1 <- surveys %>% 
+  filter(!is.na(weight), !is.na(hindfoot_length)) %>% 
+  pivot_longer(names_to = "measurement", values_to = "value", cols = c(hindfoot_length, weight))
+
+surveys_long_1 %>% 
+  group_by(year, measurement, plot_type) %>%
+  summarise(mean_value = mean(value)) %>% 
+  pivot_wider(names_from = measurement, values_from = mean_value)
+
+surveys_complete <- surveys %>% 
+  filter(!is.na(weight), !is.na(sex), !is.na(hindfoot_length))
+
+write_csv(surveys_complete, file = "suvreys_complete.csv")  
